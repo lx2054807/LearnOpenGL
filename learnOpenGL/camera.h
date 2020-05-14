@@ -84,11 +84,35 @@ public:
 		Yaw += xoffset;
 		Pitch += yoffset;
 
-		if (constrainPitch) {}
+		if (constrainPitch) {
+			if (Pitch > 89.0f)
+				Pitch = 89.0f;
+			if (Pitch < -89.0f)
+				Pitch = -89.0f;
+		}
+
+		updateCameraVectors();
+	}
+
+	void ProcessMouseScroll(float yoffset) {
+		if (Zoom >= 1.0f && Zoom <= 45.0f)
+			Zoom -= yoffset;
+		if (Zoom <= 1.0f)
+			Zoom = 1.0f;
+		if (Zoom >= 45.0f)
+			Zoom = 45.0f;
 	}
 
 private:
-	void updateCameraVectors() {}
+	void updateCameraVectors() {
+		vec3 front;
+		front.x = cos(radians(Yaw) * cos(radians(Pitch)));
+		front.y = sin(radians(Pitch));
+		front.z = sin(radians(Yaw) * cos(radians(Pitch)));
+		Front = normalize(front);
+		Right = normalize(cross(Front, WorldUp));
+		Up = normalize(cross(Right, Front));
+	}
 };
 
 #endif 
