@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "shader.h"
+#include "camera.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
@@ -16,14 +17,10 @@ void processInput(GLFWwindow* window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-float mixLevel = 0.2f;
-vec3 cameraPos = vec3(0.0f, 0.0f, 3.0f);
-vec3 cameraDirection = vec3(0.0f, 0.0f, -1.0f);
-vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+Camera camera(vec3(0.0f, 0.0f, 3.0f));
 bool firstMouse = true;
-float lastX = 400, lastY = 300;
-float yawAngle = 0.0f, pitchAngle = 0.0f;
-float fov = 45.0f;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -133,17 +130,12 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(0));
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    //glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    //glEnableVertexAttribArray(2);
     stbi_set_flip_vertically_on_load(true);
 
     // 处理纹理相关
@@ -187,14 +179,9 @@ int main()
     }
 
     stbi_image_free(data);
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0);
 
     ourShader.use();
@@ -218,30 +205,21 @@ int main()
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        //glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //float timeValue = glfwGetTime();
-        //float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-        //int vertexColorLocation = glGetUniformLocation(blueShaderProgram, "uniColor");
-        //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-        // draw our first triangle
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
         ourShader.use();
 
-
         mat4 view;
-        view = lookAt(cameraPos, cameraPos+cameraDirection, cameraUp);
-        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+        view = camera.GetViewMatrix();
+        ourShader.setMat4("view", view);
 
         mat4 projection;
-        projection = perspective(radians(fov),(1280.0f/ 720.0f) /*(float)SCR_WIDTH / (float)SCR_HEIGHT*/, 0.1f, 100.0f);
+        projection = perspective(radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
-
 
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
@@ -260,11 +238,6 @@ int main()
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-        //glDrawArrays(GL_TRIANGLES, 3, 3);
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // glBindVertexArray(0); // no need to unbind it every time 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -289,24 +262,23 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    float speed = deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraPos += speed * cameraDirection;
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraPos -= speed * cameraDirection;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        cameraPos += speed * cameraUp;
+        camera.ProcessKeyboard(UP, deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        cameraPos -= speed * cameraUp;
+        camera.ProcessKeyboard(BOTTOM, deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraPos -= normalize(cross(cameraDirection, cameraUp)) * speed;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraPos += normalize(cross(cameraDirection, cameraUp)) * speed;
+        camera.ProcessKeyboard(RIGHT, deltaTime);
     }
 }
 
@@ -333,34 +305,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastX = xpos;
     lastY = ypos;
 
-    float sensitivity = 0.05;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yawAngle += xoffset;
-    pitchAngle += yoffset;
-
-    if (pitchAngle > 89.0f)
-        pitchAngle = 89.0f;
-    if (pitchAngle < -89.0f)
-        pitchAngle = -89.0f;
-
-    glm::vec3 front;
-    front.x = cos(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
-    front.y = sin(glm::radians(pitchAngle));
-    front.z = sin(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
-    cameraDirection = glm::normalize(front);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    if (fov >= 1.0f && fov <= 45.0f) {
-        fov -= yoffset;
-    }
-    if (fov <= 1.0f) {
-        fov = 1.0f;
-    }
-    if (fov >= 45.0f) {
-        fov = 45.0f;
-    }
+    camera.ProcessMouseScroll(yoffset);
 }
