@@ -60,7 +60,32 @@ public:
 	}
 
 	mat4 GetViewMatrix() {
-		return lookAt(Position, Position + Front, Up);
+		//return lookAt(Position, Position + Front, Up);
+		return calculate_lookAt_matrix(Position, Position + Front, WorldUp);
+	}
+
+	mat4 calculate_lookAt_matrix(vec3 position, vec3 target, vec3 worldUp) {
+		vec3 zaxis = normalize(position - target); // cameradirection
+		vec3 xaxis = normalize(cross(normalize(worldUp), zaxis)); // cameraright
+		vec3 yaxis = cross(zaxis , xaxis); // cameraup
+
+		mat4 translation;
+		translation[3][0] = -position.x;
+		translation[3][1] = -position.y;
+		translation[3][2] = -position.z;
+
+		mat4 rotation;
+		rotation[0][0] = xaxis.x;
+		rotation[1][0] = xaxis.y;
+		rotation[2][0] = xaxis.z;
+		rotation[0][1] = yaxis.x;
+		rotation[1][1] = yaxis.y;
+		rotation[2][1] = yaxis.z;
+		rotation[0][2] = zaxis.x;
+		rotation[1][2] = zaxis.y;
+		rotation[2][2] = zaxis.z;
+
+		return rotation * translation;
 	}
 
 	void ProcessKeyboard(Camera_Movement direction, float deltaTime) {
