@@ -60,8 +60,8 @@ public:
 	}
 
 	mat4 GetViewMatrix() {
-		//return lookAt(Position, Position + Front, Up);
-		return calculate_lookAt_matrix(Position, Position + Front, WorldUp);
+		return lookAt(Position, Position + Front, Up);
+		//return calculate_lookAt_matrix(Position, Position + Front, WorldUp);
 	}
 
 	mat4 calculate_lookAt_matrix(vec3 position, vec3 target, vec3 worldUp) {
