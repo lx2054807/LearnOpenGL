@@ -153,9 +153,23 @@ int main()
         //vec3 lightPos(sin(glfwGetTime()), 1.0f, 2.0f); // “∆∂Øπ‚‘¥
         
         lightingShader.use();
-        lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.3f);
-        lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("lightPos", lightPos);
+        lightingShader.setVec3("material.ambient", 0.135f, 0.2225f, 0.1575f);
+        lightingShader.setVec3("material.diffuse", 0.54f, 0.89f, 0.63f);
+        lightingShader.setVec3("material.specular", 0.316228f, 0.316228f, 0.316228f);
+        lightingShader.setFloat("material.shininess", 0.1f);
+
+        /*vec3 lightColor;
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        vec3 diffuseColor = lightColor * vec3(0.5f);
+        vec3 ambientColor = diffuseColor * vec3(0.2f);*/
+        vec3 normColor = vec3(1.0f);
+        lightingShader.setVec3("light.position", lightPos);
+        lightingShader.setVec3("light.ambient", normColor);
+        lightingShader.setVec3("light.specular", normColor);
+        lightingShader.setVec3("light.diffuse", normColor);
         lightingShader.setVec3("viewPos", camera.Position);
 
         mat4 view;
