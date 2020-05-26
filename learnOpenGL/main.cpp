@@ -141,8 +141,11 @@ int main()
     glEnableVertexAttribArray(0);
 
     unsigned int diffuseMap = loadTexture("container2.png");
+    unsigned int specularMap = loadTexture("container2_specular.png");
+
     lightingShader.use();
     lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
     // uncomment this call to draw in wireframe polygons.
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -162,10 +165,7 @@ int main()
         //vec3 lightPos(sin(glfwGetTime()), 1.0f, 2.0f); // “∆∂Øπ‚‘¥
         
         lightingShader.use();
-        lightingShader.setVec3("material.ambient", 0.135f, 0.2225f, 0.1575f);
-        lightingShader.setVec3("material.diffuse", 0.54f, 0.89f, 0.63f);
-        lightingShader.setVec3("material.specular", 0.316228f, 0.316228f, 0.316228f);
-        lightingShader.setFloat("material.shininess", 0.1f);
+        lightingShader.setFloat("material.shininess", 64.0f);
 
         /*vec3 lightColor;
         lightColor.x = sin(glfwGetTime() * 2.0f);
@@ -176,8 +176,8 @@ int main()
         vec3 ambientColor = diffuseColor * vec3(0.2f);*/
         vec3 normColor = vec3(1.0f);
         lightingShader.setVec3("light.position", lightPos);
-        lightingShader.setVec3("light.ambient", normColor);
-        lightingShader.setVec3("light.specular", normColor);
+        lightingShader.setVec3("light.ambient", 0.2f,0.2f,0.2f);
+        lightingShader.setVec3("light.specular",0.5f,0.5f,0.5f);
         lightingShader.setVec3("light.diffuse", normColor);
         lightingShader.setVec3("viewPos", camera.Position);
 
@@ -191,6 +191,12 @@ int main()
 
         mat4 model;
         lightingShader.setMat4("model", model);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
 
         glBindVertexArray(cubeVAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         glDrawArrays(GL_TRIANGLES, 0, 36);
