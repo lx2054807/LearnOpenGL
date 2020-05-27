@@ -141,11 +141,14 @@ int main()
     glEnableVertexAttribArray(0);
 
     unsigned int diffuseMap = loadTexture("container2.png");
-    unsigned int specularMap = loadTexture("container2_specular.png");
+    unsigned int specularMap = loadTexture("container2_specular.png"); 
+    unsigned int emissiontMap = loadTexture("matrix.jpg");
+    //unsigned int specularMap = loadTexture("lighting_maps_specular_color.png"); 
 
     lightingShader.use();
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
+    lightingShader.setInt("material.emission", 2);
     // uncomment this call to draw in wireframe polygons.
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -176,8 +179,8 @@ int main()
         vec3 ambientColor = diffuseColor * vec3(0.2f);*/
         vec3 normColor = vec3(1.0f);
         lightingShader.setVec3("light.position", lightPos);
-        lightingShader.setVec3("light.ambient", 0.2f,0.2f,0.2f);
-        lightingShader.setVec3("light.specular",0.5f,0.5f,0.5f);
+        lightingShader.setVec3("light.ambient", 0.4f,0.4f,0.4f);
+        lightingShader.setVec3("light.specular",0.7f,0.7f,0.7f);
         lightingShader.setVec3("light.diffuse", normColor);
         lightingShader.setVec3("viewPos", camera.Position);
 
@@ -197,6 +200,9 @@ int main()
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, emissiontMap);
 
         glBindVertexArray(cubeVAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         glDrawArrays(GL_TRIANGLES, 0, 36);
