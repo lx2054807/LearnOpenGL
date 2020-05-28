@@ -66,8 +66,8 @@ int main()
     }
     glEnable(GL_DEPTH_TEST);
 
-    Shader lightingShader("lighting.vs", "lighting.fs");
-    Shader lampShader("lamp.vs", "lamp.fs");
+    Shader lightingShader("light.vs", "light.fs");
+    Shader CubeShader("light_cube.vs", "light_cube.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -114,6 +114,19 @@ int main()
          0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+    };
+
+    vec3 cubePositions[] = {
+    vec3(0.0f,  0.0f,  0.0f),
+    vec3(2.0f,  5.0f, -15.0f),
+    vec3(-1.5f, -2.2f, -2.5f),
+    vec3(-3.8f, -2.0f, -12.3f),
+    vec3(2.4f, -0.4f, -3.5f),
+    vec3(-1.7f,  3.0f, -7.5f),
+    vec3(1.3f, -2.0f, -2.5f),
+    vec3(1.5f,  2.0f, -2.5f),
+    vec3(1.5f,  0.2f, -1.5f),
+    vec3(-1.3f,  1.0f, -1.5f)
     };
 
     unsigned int VBO, cubeVAO;
@@ -167,7 +180,6 @@ int main()
 
         //vec3 lightPos(sin(glfwGetTime()), 1.0f, 2.0f); // “∆∂Øπ‚‘¥
         
-        lightingShader.use();
         lightingShader.setFloat("material.shininess", 64.0f);
 
         /*vec3 lightColor;
@@ -178,7 +190,7 @@ int main()
         vec3 diffuseColor = lightColor * vec3(0.5f);
         vec3 ambientColor = diffuseColor * vec3(0.2f);*/
         vec3 normColor = vec3(1.0f);
-        lightingShader.setVec3("light.position", lightPos);
+        lightingShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
         lightingShader.setVec3("light.ambient", 0.4f,0.4f,0.4f);
         lightingShader.setVec3("light.specular",0.7f,0.7f,0.7f);
         lightingShader.setVec3("light.diffuse", normColor);
@@ -191,7 +203,7 @@ int main()
         mat4 projection;
         projection = perspective(radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         lightingShader.setMat4("projection", projection);
-
+        
         mat4 model;
         lightingShader.setMat4("model", model);
 
@@ -205,17 +217,27 @@ int main()
         glBindTexture(GL_TEXTURE_2D, emissiontMap);
 
         glBindVertexArray(cubeVAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        lampShader.use();
-        lampShader.setMat4("projection", projection);
-        lampShader.setMat4("view", view);
-        
-        model = translate(model, lightPos);
-        model = scale(model, vec3(0.2f));
-        lampShader.setMat4("model", model);
+        for (unsigned i = 0; i < 10; i++) {
+            model = translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = rotate(model, radians(angle), vec3(1.0f, 0.3f, 0.5f));
+            lightingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+        /*CubeShader.use();
+        CubeShader.setMat4("projection", projection);
+        CubeShader.setMat4("view", view);
         glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        for (unsigned i = 0; i < 10; i++) {
+            model = translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = rotate(model, radians(angle), vec3(1.0f, 0.3f, 0.5f));
+            CubeShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }*/
 
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
