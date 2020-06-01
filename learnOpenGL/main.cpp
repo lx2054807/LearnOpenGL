@@ -188,13 +188,13 @@ int main()
         vec3 diffuseColor = lightColor * vec3(0.5f);
         vec3 ambientColor = diffuseColor * vec3(0.2f);*/
         vec3 normColor = vec3(1.0f);
-        lightingShader.setVec3("light.position", lightPos);
+        lightingShader.setVec3("light.position", camera.Position);
         lightingShader.setVec3("light.ambient", 0.4f,0.4f,0.4f);
         lightingShader.setVec3("light.specular",0.7f,0.7f,0.7f);
-        lightingShader.setFloat("light.constant", 1.0f);
-        lightingShader.setFloat("light.linear", 0.09f);
-        lightingShader.setFloat("light.quadratic", 0.032f);
         lightingShader.setVec3("light.diffuse", normColor);
+        lightingShader.setVec3("light.direction", camera.Front);
+        lightingShader.setFloat("light.cutOff", cos(radians(12.5f)));
+        lightingShader.setFloat("light.outerCutOff", cos(radians(17.5f)));
         lightingShader.setVec3("viewPos", camera.Position);
 
         mat4 view;
