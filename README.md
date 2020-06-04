@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 光照 - 复习
+目前进度: 模型加载 - assimp
 
 materials:http://devernay.free.fr/cours/opengl/materials.html
 quaternion:https://krasjet.github.io/quaternion/quaternion.pdf
