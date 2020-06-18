@@ -8,6 +8,7 @@
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/glm/gtc/type_ptr.hpp>
+#include <map>
 using namespace glm;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -63,6 +64,8 @@ int main()
     }
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Shader grassShader("blend.vs", "blend.fs");
 
@@ -186,7 +189,7 @@ int main()
 
     unsigned int cubeTexture = loadTexture("container2.png");
     unsigned int floorTexture = loadTexture("awesomeface.png");
-    unsigned int grassTexture = loadTexture("grass.png");
+    unsigned int grassTexture = loadTexture("blending_transparent_window.png");
     //unsigned int specularMap = loadTexture("lighting_maps_specular_color.png"); 
 
     grassShader.use();
@@ -212,6 +215,13 @@ int main()
         // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
+
+        map<float, vec3> sorted;
+        for (unsigned int i = 0; i < vegetation.size(); i++) 
+        {
+            float distance = length(camera.Position - vegetation[i]);
+            sorted[distance] = vegetation[i];
+        }
 
         grassShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -239,10 +249,10 @@ int main()
         // vegetation
         glBindVertexArray(grassVAO);
         glBindTexture(GL_TEXTURE_2D, grassTexture);
-        for (unsigned int i = 0; i < vegetation.size(); i++)
+        for (map<float, vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it )
         {
             model = glm::mat4(1.0f);
-            model = glm::translate(model, vegetation[i]);
+            model = glm::translate(model, it->second);
             grassShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
