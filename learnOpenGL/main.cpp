@@ -63,12 +63,8 @@ int main()
     }
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    Shader depthShader("depth.vs", "depth.fs");
-    Shader stencilShader("stencil.vs", "stencil.fs");
+    Shader grassShader("blend.vs", "blend.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -127,6 +123,24 @@ int main()
          5.0f, -0.5f, -5.0f,  2.0f, 2.0f
     };
 
+    float transparentVertices[] = {
+        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    vector<vec3> vegetation;
+    vegetation.push_back(vec3(-1.5f, 0.0f, -0.48f));
+    vegetation.push_back(vec3(1.5f, 0.0f, 0.51f));
+    vegetation.push_back(vec3(0.0f, 0.0f, 0.7f));
+    vegetation.push_back(vec3(0.5f, 0.0f, -0.6f));
+    vegetation.push_back(vec3(-0.3f, 0.0f, -2.3f));
+
     unsigned int cubeVBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
@@ -156,12 +170,27 @@ int main()
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
+    unsigned grassVAO, grassVBO;
+    glGenVertexArrays(1, &grassVAO);
+    glGenBuffers(1, &grassVBO);
+
+    glBindVertexArray(grassVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(0));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
     unsigned int cubeTexture = loadTexture("container2.png");
     unsigned int floorTexture = loadTexture("awesomeface.png");
+    unsigned int grassTexture = loadTexture("grass.png");
     //unsigned int specularMap = loadTexture("lighting_maps_specular_color.png"); 
 
-    depthShader.use();
-    depthShader.setInt("texture1", 0);
+    grassShader.use();
+    grassShader.setInt("texture1", 0);
     // uncomment this call to draw in wireframe polygons.
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -184,69 +213,39 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
 
-        // set uniforms
-        stencilShader.use();
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = camera.GetViewMatrix();
+        grassShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        stencilShader.setMat4("view", view);
-        stencilShader.setMat4("projection", projection);
-
-        depthShader.use();
-        depthShader.setMat4("view", view);
-        depthShader.setMat4("projection", projection);
-
-        // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
-        glStencilMask(0x00);
-        // floor
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        depthShader.setMat4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
-
-        // 1st. render pass, draw objects as normal, writing to the stencil buffer
-        // --------------------------------------------------------------------
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 model = glm::mat4(1.0f);
+        grassShader.setMat4("projection", projection);
+        grassShader.setMat4("view", view);
         // cubes
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        depthShader.setMat4("model", model);
+        grassShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        depthShader.setMat4("model", model);
+        grassShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
-        // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
-        // the objects' size differences, making it look like borders.
-        // -----------------------------------------------------------------------------------------------------------------------------
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
-        stencilShader.use();
-        float scale = 1.1;
-        // cubes
-        glBindVertexArray(cubeVAO);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        // floor
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        model = glm::scale(model, glm::vec3(scale, scale, scale));
-        stencilShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(scale, scale, scale));
-        stencilShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 0, 0xFF);
-        glEnable(GL_DEPTH_TEST);
+        grassShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // vegetation
+        glBindVertexArray(grassVAO);
+        glBindTexture(GL_TEXTURE_2D, grassTexture);
+        for (unsigned int i = 0; i < vegetation.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            grassShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -327,13 +326,14 @@ unsigned int loadTexture(char const* path) {
     glGenTextures(1, &textureID);
     int width, height, nrComponents;
     unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data) {
+    if (data) 
+    {
         GLenum format;
-        if (nrComponents == 1)
+        /*if (nrComponents == 1)
             format = GL_RED;
         else if (nrComponents == 3)
             format = GL_RGB;
-        else if (nrComponents == 4)
+        else if (nrComponents == 4)*/
             format = GL_RGBA;
 
         glBindTexture(GL_TEXTURE_2D, textureID);
