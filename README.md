@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级OPENGL - 帧缓冲 - 渲染到纹理
+目前进度: 高级OPENGL - 帧缓冲 - 后期处理(渲染到纹理还有些不理解)
 
 // assimp库编译总是失败, 没有运行 模型加载 - 模型部分的代码, 只加入了mesh类和model类
 materials:http://devernay.free.fr/cours/opengl/materials.html
