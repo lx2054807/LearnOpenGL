@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级OPENGL - 立方体贴图 - 反射
+目前进度: 高级OPENGL - 高级数据
 
 assimp库编译总是失败, 没有运行 模型加载 - 模型部分的代码, 只加入了mesh类和model类
 materials:http://devernay.free.fr/cours/opengl/materials.html
