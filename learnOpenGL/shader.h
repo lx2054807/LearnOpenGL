@@ -19,39 +19,48 @@ class Shader {
 public:
 	unsigned int ID;	//程序ID
 
-	Shader(const char* vertexPath, const char* fragmentPath) {
+	//Shader(const char* vertexPath, const char* fragmentPath) {
+	Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath) {
 		// 1. 从文件路径获取shader
 		string vertexCode;
 		string fragmentCode;
+		string geometryCode;
 		ifstream vShaderFile;
 		ifstream fShaderFile;
+		ifstream gShaderFile;
 		vShaderFile.exceptions(ifstream::failbit | ifstream::badbit);
 		fShaderFile.exceptions(ifstream::failbit | ifstream::badbit);
+		gShaderFile.exceptions(ifstream::failbit | ifstream::badbit);
 		try {
 			// 打开文件
 			vShaderFile.open(vertexPath);
 			fShaderFile.open(fragmentPath);
-			stringstream vShaderStream, fShaderStream;
+			gShaderFile.open(geometryPath);
+			stringstream vShaderStream, fShaderStream, gShaderStream;
 			// 读取文件的缓冲内容到数据流
 			vShaderStream << vShaderFile.rdbuf();
 			fShaderStream << fShaderFile.rdbuf();
+			gShaderStream << gShaderFile.rdbuf();
 			vShaderFile.close();
 			fShaderFile.close();
+			gShaderFile.close();
 			vertexCode = vShaderStream.str();
 			fragmentCode = fShaderStream.str();
+			geometryCode = gShaderStream.str();
 		}
 		catch (ifstream::failure e) {
 			cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << endl;
 		}
 		const char* vShaderCode = vertexCode.c_str();
 		const char* fShaderCode = fragmentCode.c_str();
+		const char* gShaderCode = geometryCode.c_str();
 
 		// 2. 编译着色器
-		unsigned int vertex, fragment;
+		unsigned int vertex, fragment, geometry;
 		int success;
 		char infoLog[512];
 
-		// 定点着色器
+		// 顶点着色器
 		vertex = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(vertex, 1, &vShaderCode, NULL);
 		glCompileShader(vertex);
@@ -60,6 +69,17 @@ public:
 		if (!success) {
 			glGetShaderInfoLog(vertex, 512, NULL, infoLog);
 			cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << endl;
+		}
+
+		// 几何着色器
+		geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometry, 1, &gShaderCode, NULL);
+		glCompileShader(geometry);
+
+		glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			glGetShaderInfoLog(geometry, 512, NULL, infoLog);
+			cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << endl;
 		}
 		
 		// 片段着色器
@@ -76,6 +96,7 @@ public:
 		// 着色器程序
 		ID = glCreateProgram();
 		glAttachShader(ID, vertex);
+		glAttachShader(ID, geometry);
 		glAttachShader(ID, fragment);
 		glLinkProgram(ID);
 
@@ -88,6 +109,7 @@ public:
 		// 删除shader
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
+		glDeleteShader(geometry);
 	}
 
 	void use() {
