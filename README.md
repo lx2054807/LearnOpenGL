@@ -1,9 +1,9 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级OPENGL - 高级数据
+目前进度: 高级OPENGL - 高级GLSL
 
-assimp库编译总是失败, 没有运行 模型加载 - 模型部分的代码, 只加入了mesh类和model类
+网站收藏:
 materials:http://devernay.free.fr/cours/opengl/materials.html
 quaternion:https://krasjet.github.io/quaternion/quaternion.pdf
 bonus_gimbal_lock:https://krasjet.github.io/quaternion/bonus_gimbal_lock.pdf
