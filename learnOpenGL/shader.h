@@ -20,40 +20,40 @@ public:
 	unsigned int ID;	//程序ID
 
 	//Shader(const char* vertexPath, const char* fragmentPath) {
-	Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath) {
+	Shader(const char* vertexPath, const char* fragmentPath){//, const char* geometryPath) {
 		// 1. 从文件路径获取shader
 		string vertexCode;
 		string fragmentCode;
-		string geometryCode;
+		//string geometryCode;
 		ifstream vShaderFile;
 		ifstream fShaderFile;
-		ifstream gShaderFile;
+		//ifstream gShaderFile;
 		vShaderFile.exceptions(ifstream::failbit | ifstream::badbit);
 		fShaderFile.exceptions(ifstream::failbit | ifstream::badbit);
-		gShaderFile.exceptions(ifstream::failbit | ifstream::badbit);
+		//gShaderFile.exceptions(ifstream::failbit | ifstream::badbit);
 		try {
 			// 打开文件
 			vShaderFile.open(vertexPath);
 			fShaderFile.open(fragmentPath);
-			gShaderFile.open(geometryPath);
+			//gShaderFile.open(geometryPath);
 			stringstream vShaderStream, fShaderStream, gShaderStream;
 			// 读取文件的缓冲内容到数据流
 			vShaderStream << vShaderFile.rdbuf();
 			fShaderStream << fShaderFile.rdbuf();
-			gShaderStream << gShaderFile.rdbuf();
+			//gShaderStream << gShaderFile.rdbuf();
 			vShaderFile.close();
 			fShaderFile.close();
-			gShaderFile.close();
+			//gShaderFile.close();
 			vertexCode = vShaderStream.str();
 			fragmentCode = fShaderStream.str();
-			geometryCode = gShaderStream.str();
+			//geometryCode = gShaderStream.str();
 		}
 		catch (ifstream::failure e) {
 			cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << endl;
 		}
 		const char* vShaderCode = vertexCode.c_str();
 		const char* fShaderCode = fragmentCode.c_str();
-		const char* gShaderCode = geometryCode.c_str();
+		//const char* gShaderCode = geometryCode.c_str();
 
 		// 2. 编译着色器
 		unsigned int vertex, fragment, geometry;
@@ -72,7 +72,7 @@ public:
 		}
 
 		// 几何着色器
-		geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		/*geometry = glCreateShader(GL_GEOMETRY_SHADER);
 		glShaderSource(geometry, 1, &gShaderCode, NULL);
 		glCompileShader(geometry);
 
@@ -80,7 +80,7 @@ public:
 		if (!success) {
 			glGetShaderInfoLog(geometry, 512, NULL, infoLog);
 			cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << endl;
-		}
+		}*/
 		
 		// 片段着色器
 		fragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -96,7 +96,7 @@ public:
 		// 着色器程序
 		ID = glCreateProgram();
 		glAttachShader(ID, vertex);
-		glAttachShader(ID, geometry);
+		//glAttachShader(ID, geometry);
 		glAttachShader(ID, fragment);
 		glLinkProgram(ID);
 
@@ -109,7 +109,7 @@ public:
 		// 删除shader
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
-		glDeleteShader(geometry);
+		//glDeleteShader(geometry);
 	}
 
 	void use() {
@@ -136,6 +136,15 @@ public:
 	void setVec3(const std::string& name, float x, float y, float z) const
 	{
 		glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
+	}
+
+	void setVec2(const std::string& name, const vec2& value) const
+	{
+		glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+	}
+	void setVec2(const std::string& name, float x, float y) const
+	{
+		glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y);
 	}
 
 	void setMat4(const std::string& name, const glm::mat4& mat) const

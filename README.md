@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级OPENGL - 实例化
+目前进度: 高级OPENGL - 实例化 - 实例化数组
 
 网站收藏:
 materials:http://devernay.free.fr/cours/opengl/materials.html
