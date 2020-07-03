@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级OPENGL - 抗锯齿
+目前进度: 高级光照 - 高级光照
 
 网站收藏:
 materials:http://devernay.free.fr/cours/opengl/materials.html
