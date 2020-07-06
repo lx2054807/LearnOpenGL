@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级光照 - Gamma校正
+目前进度: 高级光照 - 阴影 - 阴影映射
 
 网站收藏:
 materials:http://devernay.free.fr/cours/opengl/materials.html
