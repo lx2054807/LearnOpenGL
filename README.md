@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级光照 - 阴影 - 点光源阴影
+目前进度: 高级光照 - 法线贴图
 
 网站收藏:
 materials:http://devernay.free.fr/cours/opengl/materials.html
