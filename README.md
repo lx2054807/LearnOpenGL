@@ -1,7 +1,7 @@
 # LearnOpenGL
 
 https://learnopengl-cn.github.io/
-目前进度: 高级光照 - 视差贴图 - 陡峭时差映射
+目前进度: 高级光照 - HDR
 
 网站收藏:
 materials:http://devernay.free.fr/cours/opengl/materials.html
